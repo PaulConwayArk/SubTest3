@@ -1,0 +1,997 @@
+using NUnit.Framework;
+using OpenQA.Selenium;
+using OpenQA.Selenium.PhantomJS;
+using OpenQA.Selenium.Support.UI;
+using System;
+using System.Collections.Generic;
+using System.Drawing.Imaging;
+using System.Linq;
+using System.Threading;
+using TechTalk.SpecFlow;
+
+namespace AXPI_ClickOne_Live_Test.SpecFlowTestSteps
+{
+    //[Binding]
+    class ClickoneSteps
+    {
+        public static IWebDriver _driver = new PhantomJSDriver();
+        public int ProductsRows;
+
+        public void TakeScreenshot(IWebDriver driver, string saveLocation)
+        {
+            ITakesScreenshot ssdriver = driver as ITakesScreenshot;
+            Screenshot screenshot = ssdriver.GetScreenshot();
+            screenshot.SaveAsFile(@"C:\Users\paulc_000\Desktop\" + saveLocation, ImageFormat.Png);
+        }
+
+
+        [BeforeFeature]
+        public static void Login()
+        {
+            _driver.Manage().Window.Maximize();
+            _driver.Url = "http://localhost:9000";
+            Thread.Sleep(10000);
+            _driver.FindElement(By.CssSelector("#logInButton")).Click();
+            _driver.FindElement(By.CssSelector("#cred_userid_inputtext")).Click();
+            _driver.FindElement(By.CssSelector("#cred_userid_inputtext")).SendKeys("test.user@axpi.arkive.solutions");
+            _driver.FindElement(By.CssSelector("#cred_password_inputtext")).Click();
+            _driver.FindElement(By.CssSelector("#cred_password_inputtext")).SendKeys("clickOneTestAxpi1");
+            Thread.Sleep(3000);
+            _driver.FindElement(By.Id("cred_sign_in_button")).Click();
+            Thread.Sleep(3000);
+        }
+
+        [AfterStep]
+        public void AfterStep()
+        {
+            if (ScenarioContext.Current.TestError != null)
+            {
+                ITakesScreenshot ssdriver = _driver as ITakesScreenshot;
+                Screenshot screenshot = ssdriver.GetScreenshot();
+                screenshot.SaveAsFile(@"C:\Users\paulc_000\Desktop\Fail.png", ImageFormat.Png);
+            }
+        }
+
+
+        [Given(@"that we are on the ""(.*)""")]
+        public void GivenThatWeAreOnThe(string p0)
+        {
+            string PageLocation = "";
+            if (p0 == "Transaction Log")
+            {
+                PageLocation = "#transactionLog";
+            }
+            else if (p0 == "Market Configuration")
+            {
+                PageLocation = "#marketConfiguration";
+            }
+            else if (p0 == "Spread Configuration")
+            {
+                PageLocation = "#spreadConfiguration";
+            }
+            else if (p0 == "Market Prices")
+            {
+                PageLocation = "#marketprices";
+            }
+
+            _driver.Url = "http://localhost:9000" + PageLocation;
+            Thread.Sleep(10000);
+            Assert.AreEqual(_driver.FindElement(By.CssSelector(".axpiPageTitle")).Text, p0);
+        }
+
+        [Given(@"that the connection status is ""(.*)""")]
+        public void GivenThatTheConnectionStatusIs(string p0)
+        {
+            if (p0 == "Connected")
+            {
+                var Connected = _driver.FindElement(By.CssSelector(".liveConnected"));
+                int retry = 0;
+                int max = 6;
+
+                while ((Connected.Displayed != true) && (retry <= max))
+                {
+                    Thread.Sleep(10000);
+                    retry++;
+                }
+            }
+        }
+
+        [Given(@"that the ""(.*)"" is visible")]
+        public void GivenThatTheIsVisible(string p0)
+        {
+            if (p0 == "Copy")
+            {
+                var CopyIsVisible = _driver.FindElement(By.CssSelector(".copyTable")).Displayed;
+                Assert.IsTrue(CopyIsVisible);
+            }
+            else if (p0 == "Start/Pause")
+            {
+                var StartPauseIsVisible = _driver.FindElement(By.CssSelector(".pauseTransactionFlow")).Displayed;
+                Assert.IsTrue(StartPauseIsVisible);
+            }
+            else if (p0 == "Market Transactions")
+            {
+                var MarketTransactionsIsVisible = _driver.FindElement(By.CssSelector(".fa-list-alt")).Displayed;
+                Assert.IsTrue(MarketTransactionsIsVisible);
+            }
+            else if (p0 == "User Transactions")
+            {
+                var UserTransactionsIsVisible = _driver.FindElement(By.CssSelector(".fa-user")).Displayed;
+                Assert.IsTrue(UserTransactionsIsVisible);
+            }
+            else if (p0 == "Available")
+            {
+                var AvailableIsVisible = _driver.FindElement(By.CssSelector(".marketConfiguratTable > div > h2")).Displayed;
+                Assert.IsTrue(AvailableIsVisible);
+            }
+            else if (p0 == "Selected")
+            {
+                var SelectedIsVisible = _driver.FindElement(By.CssSelector(".marketConfiguratTable > div > h2")).Displayed;
+                Assert.IsTrue(SelectedIsVisible);
+            }
+            else if (p0 == "Markets")
+            {
+                var MarketsIsVisible = _driver.FindElement(By.CssSelector("#markets")).Displayed;
+                Assert.IsTrue(MarketsIsVisible);
+            }
+            else if (p0 == "Spread Overrides")
+            {
+                var SpreadOverridesIsVisible = _driver.FindElement(By.CssSelector("#overrides")).Displayed;
+                Assert.IsTrue(SpreadOverridesIsVisible);
+            }
+            else if (p0 == "Users")
+            {
+                var UsersIsVisible = _driver.FindElement(By.CssSelector("#users")).Displayed;
+                Assert.IsTrue(UsersIsVisible);
+            }
+            else if (p0 == "Italy Baseload")
+            {
+                var Elements = _driver.FindElements(By.CssSelector("#table > thead > tr"));
+                bool Result = false;
+
+                foreach (var _row in Elements)
+                {
+                    if (_row.Text.Contains(p0))
+                    {
+                        Result = true;
+
+
+                    }
+                }
+                Assert.IsTrue(Result);
+            }
+            else if (p0 == "Markets Prices")
+            {
+                var MarketsPricesIsVisible = _driver.FindElement(By.CssSelector(".livePriceTable")).Displayed;
+                Assert.IsTrue(MarketsPricesIsVisible);
+            }
+        }
+
+        [Given(@"view the amount of products visible")]
+        public void GivenViewTheAmountOfProductsVisible()
+        {
+            bool Result = false;
+            var Rows = _driver.FindElements(By.CssSelector("#table > tbody > tr")).Count;
+            ProductsRows = Rows;
+            if (Rows > 0)
+            {
+                Result = true;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Given(@"click on the ""(.*)"" button")]
+        public void GivenClickOnTheButton(string p0)
+        {
+            if (p0 == "Copy")
+            {
+                _driver.FindElement(By.CssSelector(".copyTable")).Click();
+            }
+            else if (p0 == "Save")
+            {
+                _driver.FindElement(By.CssSelector("#ribbon > div.applyChanges")).Click();
+            }
+            else if (p0 == "Start/Pause")
+            {
+                _driver.FindElement(By.CssSelector(".pauseTransactionFlow")).Click();
+                TakeScreenshot(_driver, "pauseTransactionFlow.png");
+            }
+            else if (p0 == "Market Transactions")
+            {
+                _driver.FindElement(By.CssSelector(".fa-list-alt")).Click();
+            }
+            else if (p0 == "User Transactions")
+            {
+                _driver.FindElement(By.CssSelector(".showUserTransactions")).Click();
+            }
+            else if (p0 == "Markets")
+            {
+                _driver.FindElement(By.CssSelector("#content > div > ul > li:nth-child(1) > a")).Click();
+            }
+            else if (p0 == "Spread Overrides")
+            {
+                _driver.FindElement(By.CssSelector("#content > div > ul > li:nth-child(2) > a")).Click();
+            }
+            else if (p0 == "Users")
+            {
+                _driver.FindElement(By.CssSelector("#content > div > ul > li:nth-child(3) > a")).Click();
+            }
+            else if (p0 == "Add New Overrides")
+            {
+                _driver.FindElement(By.CssSelector("#overrides > div > div > div > span")).Click();
+            }
+            else if (p0 == "+")
+            {
+                _driver.FindElement(By.CssSelector("#table > tbody > tr:nth-child(8) > td > span.glyphicon.glyphicon-plus.pull-right")).Click();
+            }
+            else if (p0 == "-")
+            {
+                _driver.FindElement(By.CssSelector("#table > tbody > tr:nth-child(5) > td > span")).Click();
+            }
+            else if (p0 == "Confirm")
+            {
+                _driver.FindElement(By.CssSelector("#myModal > div > div > div.modal-footer > button.btn.btn-danger.btn-primary")).Click();
+            }
+        }
+
+        [Then(@"will display additonal product from the list")]
+        public void ThenWillDisplayAdditonalProductFromTheList()
+        {
+            bool Result = false;
+            var RowCount = _driver.FindElements(By.CssSelector("#table > tbody > tr")).Count;
+            if (RowCount > ProductsRows)
+            {
+                Result = true;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Then(@"will display remove a product from the list")]
+        public void ThenWillDisplayRemoveAProductFromTheList()
+        {
+            bool Result = false;
+            var RowCount = _driver.FindElements(By.CssSelector("#table > tbody > tr")).Count;
+            if (RowCount < ProductsRows)
+            {
+                Result = true;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        //Rewrite Table function
+        [Given(@"click on the ""(.*)"" of a product in ""(.*)""")]
+        public void GivenClickOnTheOfAProductIn(string p0, string p1)
+        {
+            var TableHeaderCols = _driver.FindElements(By.CssSelector("#right > #table > thead > tr > th.axpiCommingledMarket"));
+            int val = 0;
+            var ColValues = new List<string>();
+
+            for (var i = 0; i < TableHeaderCols.Count; i++)
+            {
+                if (TableHeaderCols[i].Text != "")
+                {
+                    ColValues.Add(TableHeaderCols[i].Text);
+                }
+            }
+
+            for (var x = 0; x < ColValues.Count; x++)
+            {
+                if (ColValues[x] == p1)
+                {
+                    val = (x + 1) * 3 ;
+                }
+            }
+
+            if(p0 == "Bid")
+            {
+                val = val - 2;
+            }
+            else if(p0 == "Ask")
+            {
+                val = val - 1;
+            }
+            var str = "#right > #table > tbody > tr:nth-child(2) > td:nth-child(" + val + ")";
+            _driver.FindElement(By.CssSelector(str)).Click();
+            Thread.Sleep(2000);
+        }
+
+        [Given(@"a ""(.*)"" modal should appear")]
+        public void GivenAModalShouldAppear(string p0)
+        {
+            bool Result = false;
+            Thread.Sleep(2000);
+            var ModalText = _driver.FindElement(By.CssSelector("#myModalLabel")).Text;
+            if (ModalText == p0)
+            {
+                Result = true;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Given(@"display the Product and Prices")]
+        public void GivenDisplayTheProductAndPrices()
+        {
+            bool Result = false;
+            var ModalBodyContainsData= _driver.FindElement(By.CssSelector(".modal-body")).Text;
+            
+            if (!String.IsNullOrEmpty(ModalBodyContainsData))
+            {
+                Result = true;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Given(@"the ""(.*)"" can be increased to ""(.*)""")]
+        public void GivenTheCanBeIncreasedTo(string p0, string p1)
+        {
+            var InputText = (dynamic)null;
+            if (p0 == "Lot Size")
+            {
+                InputText = _driver.FindElement(By.CssSelector("input.lotSize"));
+            }
+            else if (p0 == "Bid")
+            {
+
+                InputText = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td:nth-child(5) > input[type='number']"));
+            }
+            else if (p0 == "Ask")
+            {
+
+                InputText = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td:nth-child(6) > input[type='number']"));
+            }
+            else if (p0 == "Number of Lots")
+            {
+                InputText = _driver.FindElement(By.CssSelector("#myModal > div > div > div.modal-body.alignCenter > table > tbody > tr:nth-child(2) > td:nth-child(2) > input[type='number']"));
+            }
+
+            if (InputText.Displayed == true)
+            {
+                InputText.Clear();
+                InputText.SendKeys(p1);
+            }
+        }
+
+        [Given(@"click on the ""(.*)"" checkbox")]
+        public void GivenClickOnTheCheckbox(string p0)
+        {
+            _driver.FindElement(By.CssSelector("#myModal > div > div > div.modal-footer > input[type='checkbox']")).Click();
+        }
+
+        [Then(@"display values for :")]
+        public void ThenDisplayValuesFor(Table table)
+        {
+            int Count = 0;
+            foreach (var row in table.Rows)
+            {
+                var _rowText = row[0] + ":";
+                var TableRows = _driver.FindElements(By.CssSelector("#myModal > div > div > div.modal-body.alignCenter > table > tbody > tr"));
+                foreach (var _ele in TableRows)
+                {
+                    if (_ele.Text.IndexOf(_rowText) != -1)
+                    {
+                        Count++;
+                    }
+                }
+            }
+            Assert.AreEqual(Count, table.RowCount);
+        }
+
+        //To be completed
+        [Given(@"the price has now changed")]
+        public void GivenThePriceHasNowChanged()
+        {
+            Assert.IsTrue(true);
+        }
+
+        [Then(@"a ""(.*)"" modal should appear")]
+        public void ThenAModalShouldAppear(string p0)
+        {
+            bool Result = false;
+            var ModalText = _driver.FindElement(By.CssSelector(".modal-header > h4")).Text;
+            if(ModalText == p0)
+            {
+                Result = true;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Given(@"the Transaction flow state is ""(.*)""")]
+        public void GivenTheTransactionFlowStateIs(string p0)
+        {
+            var Result = false;
+            if (p0 == "Unpaused")
+            {
+                Result = _driver.FindElement(By.CssSelector(".fa-pause")).Displayed;
+            }
+            else if (p0 == "Paused")
+            {
+                Result = _driver.FindElement(By.CssSelector(".fa-play")).Displayed;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Given(@"the Transactions have been loaded in the table")]
+        public void GivenTheTransactionsHaveBeenLoadedInTheTable()
+        {
+            bool Result = false;
+            IList<IWebElement> TableData = _driver.FindElements(By.TagName("tr"));
+            var TableIsVisible = _driver.FindElement(By.CssSelector("#transactionLogTable")).Displayed;
+            if (TableData.Count > 0 && TableIsVisible)
+            {
+                Result = true;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Then(@"a copy of the transaction log will be copied to your clipboard and timestamp will display the time of copy")]
+        public void ThenACopyOfTheTransactionLogWillBeCopiedToYourClipboardAndTimestampWillDisplayTheTimeOfCopy()
+        {
+            bool Result = false;
+            var Copied = _driver.FindElement(By.CssSelector("#transactionLogTable")).Displayed;
+            if (Copied)
+            {
+                Result = true;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Then(@"the Transaction flow state is ""(.*)""")]
+        public void ThenTheTransactionFlowStateIsAndLastUpdatedTimeShouldNotChange(string p0)
+        {
+            var Result = false;
+            if (p0 == "UnPaused")
+            {
+                Result = _driver.FindElement(By.CssSelector(".fa-pause")).Displayed;
+            }
+            else if (p0 == "Paused")
+            {
+                Result = _driver.FindElement(By.CssSelector(".fa-play")).Displayed;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Given(@"pause if state is unpaused")]
+        public void GivenPauseIfStateIsUnpaused()
+        {
+            if(_driver.FindElement(By.CssSelector(".fa-pause")).Displayed)
+            {
+                _driver.FindElement(By.CssSelector(".pauseTransactionFlow")).Click();
+            }
+        }
+
+
+        [Then(@"the following will be present in the header of table:")]
+        public void ThenTheFollowingWillBePresentInTheHeaderOfTable(Table table)
+        {
+
+            int Count = 0;
+            foreach (var row in table.Rows)
+            {
+                var _rowText = row[0];
+                var TableRows = _driver.FindElements(By.CssSelector("#transactionLogTable > thead > tr"));
+                foreach (var _ele in TableRows)
+                {
+                    TakeScreenshot(_driver, "test.png");
+                    if (_ele.Text.IndexOf(_rowText) != -1)
+                    {
+                        Count++;
+                    }
+                }
+            }
+            Assert.AreEqual(Count, table.RowCount);
+        }
+
+        [Given(@"""(.*)"" contains data")]
+        public void GivenContainsData(string p0)
+        {
+            int Count = 0;
+            if (p0 == "Available")
+            {
+                IList<IWebElement> ListData = _driver.FindElements(By.CssSelector("#content > div > div > div.marketConfiguratTablepadding > ul > li"));
+                foreach (var x in ListData)
+                {
+                    string className = x.Text.Replace(" ", ".");
+                    if (!String.IsNullOrEmpty(className))
+                    {
+                        var element = _driver.FindElement(By.CssSelector("#content > div > div > div.marketConfiguratTablepadding > ul > li." + className));
+                        Count++;
+                    }
+                }
+            }
+            else if (p0 == "Selected")
+            {
+                IList<IWebElement> ListData = _driver.FindElements(By.CssSelector("#sortableTable > li"));
+                foreach (var x in ListData)
+                {
+                    string className = x.Text.Replace(" ", ".");
+                    if (!String.IsNullOrEmpty(className))
+                    {
+                        var element = _driver.FindElement(By.CssSelector("#sortableTable > li." + className));
+                        Count++;
+                    }
+                }
+            }
+            Assert.GreaterOrEqual(Count, 1);
+        }
+
+        [Given(@"locate and click the ""(.*)"" item in the ""(.*)"" list")]
+        public void GivenLocateAndClickTheItemInTheList(string p0, string p1)
+        {
+            string Count = p0.Replace(" ", ".");
+            var Element = _driver.FindElement(By.CssSelector("#content > div > div > div.marketConfiguratTablepadding > ul > li." + Count));
+            if (Element.Displayed == false)
+            {
+                _driver.FindElement(By.CssSelector("#sortableTable > li." + Count + " > i.fa-arrow-circle-left")).Click();
+            }
+            _driver.FindElement(By.CssSelector("#content > div > div > div.marketConfiguratTablepadding > ul > li." + Count + " > i.fa-arrow-circle-right")).Click();
+        }
+
+        [Given(@"navigate to ""(.*)""")]
+        public void GivenNavigateTo(string p0)
+        {
+            if (p0 == "Market Prices")
+            {
+                _driver.FindElement(By.CssSelector("#marketPrices > a")).Click();
+            }
+        }
+
+        [Then(@"""(.*)"" and ""(.*)"" should be visible in the table")]
+        public void ThenAndShouldBeVisibleInTheTable(string p0, string p1)
+        {
+            int Element = 0;
+            IList<IWebElement> TableData = _driver.FindElements(By.TagName("th"));
+            foreach (var x in TableData)
+            {
+                if (x.Text == p0 || x.Text == p1)
+                {
+                    Element++;
+                }
+                //if (x.Text == p1)
+                //{
+                //    count++;
+                //}
+            }
+            Assert.AreEqual(2, Element);
+        }
+
+        [Then(@"""(.*)"" and ""(.*)"" should not be visible in the table")]
+        public void ThenAndShouldNotBeVisibleInTheTable(string p0, string p1)
+        {
+            int Element = 0;
+            IList<IWebElement> TableData = _driver.FindElements(By.TagName("th"));
+            foreach (var x in TableData)
+            {
+                if (x.Text == p0 || x.Text == p1)
+                {
+                    Element++;
+                }
+
+                //if (x.Text == p1)
+                //{
+                //    count++;
+                //}
+            }
+            Assert.AreNotEqual(2, Element);
+        }
+
+        //To be completed
+        [Given(@"locate and drag the ""(.*)"" item in the list to the bottom")]
+        public void GivenLocateAndDragTheItemInTheListToTheBottom(string p0)
+        {
+            
+        }
+
+        //To be completed
+        [Then(@"""(.*)"" should be loacted at the end of the table")]
+        public void ThenShouldBeLoactedAtTheEndOfTheTable(string p0)
+        {
+            Assert.IsTrue(true);
+        }
+
+        //To be completed
+        [Given(@"locate and drag the ""(.*)"" item in the list to the start")]
+        public void GivenLocateAndDragTheItemInTheListToTheStart(string p0)
+        {
+            Assert.IsTrue(true);
+        }
+
+        //To be completed
+        [Then(@"""(.*)"" should be loacted at the begining of the table")]
+        public void ThenShouldBeLoactedAtTheBeginingOfTheTable(string p0)
+        {
+            Assert.IsTrue(true);
+        }
+
+
+        [Given(@"that (.*) user inputs are visible on the page with the labels:")]
+        public void GivenThatUserInputsAreVisibleOnThePageWithTheLabels(int p0, Table table)
+        {
+            ScenarioContext.Current.Pending();
+        }
+
+        [Given(@"the dropdown ""(.*)"" should contain:")]
+        public void GivenTheDropdownShouldContain(string p0, Table table)
+        {
+            int Count = 0;
+            foreach (var _row in table.Rows)
+            {
+                int ElementPosition = 0;
+                if (_row[0] == "Italian Consumers 1")
+                {
+                    ElementPosition = 1;
+                }
+                else if (_row[0] == "Italian Consumers 2")
+                {
+                    ElementPosition = 2;
+                }
+                else if (_row[0] == "Italian Producers 1")
+                {
+                    ElementPosition = 3;
+                }
+                else if (_row[0] == "Benelux Consumers")
+                {
+                    ElementPosition = 4;
+                }
+
+                var element = _driver.FindElement(By.CssSelector("#content > div > div.row.row-padded > div:nth-child(1) > div > div > div > select > option:nth-child(" + ElementPosition + ")"));
+
+                if (element.Displayed == true)
+                {
+                    Count++;
+                }
+            }
+            Assert.AreEqual(4, Count);
+        }
+
+        [Given(@"that the user ""(.*)"" is in the group ""(.*)""")]
+        public void GivenThatTheUserIsInTheGroup(string p0, string p1)
+        {
+            bool Result = false;
+            IList<IWebElement> Rows_table = _driver.FindElements(By.TagName("tr"));
+            
+            foreach (var _item in Rows_table)
+            {
+                string RowUser = _item.Text;
+
+                if (RowUser.Contains(p0) && RowUser.Contains(p1))
+                {
+                    Result = true;
+                }
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Given(@"change the Group to ""(.*)"" from ""(.*)"" the dropdown")]
+        public void GivenChangeTheGroupToFromTheDropdown(string p0, string p1)
+        {
+            var Element = _driver.FindElement(By.CssSelector("#content > div > div > div:nth-child(1) > div > div > div > select"));
+            Element.Click();
+            var _selectedElement = new SelectElement(Element);
+            _selectedElement.SelectByText(p0);
+        }
+
+        [Then(@"the data in the container should change to ""(.*)"" data")]
+        public void ThenTheDataInTheContainerShouldChangeToData(string p0)
+        {
+            var Element = _driver.FindElement(By.CssSelector("#content > div > div.row.row-padded > div:nth-child(1) > div > div > div > select"));
+            var _selectedElement = new SelectElement(Element);
+            var _selectedElementText = _selectedElement.SelectedOption.Text;
+            Assert.AreEqual(_selectedElementText, p0);
+        }
+
+
+        [Given(@"the user is in the Transaction Type of ""(.*)""")]
+        public void GivenTheUserIsInTheTransactionTypeOf(string p0)
+        {
+            var Element = _driver.FindElement(By.CssSelector("select.transactionType"));
+            var _selectedElement = new SelectElement(Element);
+            var _selectedElementText = _selectedElement.SelectedOption.Text;
+
+            if (_selectedElementText != p0)
+            {
+                _selectedElement.SelectByText(p0);
+                _selectedElementText = _selectedElement.SelectedOption.Text;
+            }
+
+            Assert.AreEqual(_selectedElement, p0);
+        }
+
+        [Then(@"""(.*)"" should have the value of ""(.*)""")]
+        public void ThenShouldHaveTheValueOf(string p0, int p1)
+        {
+            Assert.AreEqual(_driver.FindElement(By.CssSelector(".modal-body > table > tbody > tr:nth-child(1) > td:nth-child(2)")), p1);
+        }
+
+        [Given(@"the ""(.*)"" can be decreased to ""(.*)""")]
+        public void GivenTheCanBeDecreasedTo(string p0, string p1)
+        {
+            var InputText = (dynamic)null;
+            if (p0 == "Lot Size")
+            {
+                InputText = _driver.FindElement(By.CssSelector("input.lotSize")); 
+            }
+            else if (p0 == "Bid")
+            {
+                InputText = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td:nth-child(5) > input[type='number']"));
+            }
+            else if (p0 == "Ask")
+            {
+                InputText = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td:nth-child(6) > input[type='number']"));
+            }
+            InputText.Clear();
+            InputText.SendKeys(p1);
+        }
+
+        [Given(@"change the Transaction Type to ""(.*)""")]
+        public void GivenChangeTheTransactionTypeTo(string p0)
+        {
+            var Element = _driver.FindElement(By.CssSelector("select.transactionType"));
+            var _selectedElement = new SelectElement(Element);
+            var _selectedElementText = _selectedElement.SelectedOption.Text;
+
+            if (_selectedElementText != p0)
+            {
+                _selectedElement.SelectByText(p0);
+                _selectedElementText = _selectedElement.SelectedOption.Text;
+            }
+
+            Assert.AreEqual(_selectedElementText, p0);
+        }
+
+        [Given(@"that the Market ""(.*)"" is added and visible for ""(.*)""")]
+        public void GivenThatTheMarketIsAddedAndVisibleFor(string p0, string p1)
+        {
+            IWebElement Checkbox = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td.col-xs-1.inputCell > input[type='checkbox']"));
+            if (Checkbox.Selected == false && Checkbox.Displayed)
+            {
+                Checkbox.Click();
+            }
+        }
+
+        [Given(@"""(.*)"" the checkbox for ""(.*)""")]
+        public void GivenTheCheckboxFor(string p0, string p1)
+        {
+            IWebElement Checkbox = (dynamic)null;
+            if (p0 == "Uncheck" && p1 == "Test User")
+            {
+                Checkbox = _driver.FindElement(By.CssSelector("#users > div > table > tbody > tr:nth-child(15) > td.col-xs-1.unpadded-col > input"));
+            }
+            else if (p0 == "Check" && p1 == "Test User")
+            {
+                Checkbox = _driver.FindElement(By.CssSelector("#users > div > table > tbody > tr:nth-child(15) > td.col-xs-1.unpadded-col > input"));
+            }
+            else if (p0 == "Uncheck")
+            {
+                Checkbox = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td.col-xs-1.inputCell > input[type='checkbox']"));
+            }
+            else if (p0 == "Check")
+            {
+                Checkbox = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td.col-xs-1.inputCell > input[type='checkbox']"));
+            }
+            Checkbox.Click();
+        }
+
+        [Then(@"the table should not contain ""(.*)"" data")]
+        public void ThenTheTableShouldNotContainData(string p0)
+        {
+            bool Result = true;
+            IList<IWebElement> Rows_table = _driver.FindElements(By.CssSelector(".axpiScrollableTable > table > thead > tr > th"));
+            TakeScreenshot(_driver, "test123.png");
+            foreach (var _item in Rows_table)
+            {
+                string _row = _item.Text;
+
+                if (_row.Contains(p0))
+                {
+                    Result = false;
+                }
+            }
+            Assert.IsFalse(Result);
+        }
+
+        [Then(@"the table should contain ""(.*)"" data")]
+        public void ThenTheTableShouldContainData(string p0)
+        {
+            bool Result = false;
+            IList<IWebElement> rows_table = _driver.FindElements(By.CssSelector(".axpiScrollableTable > table > thead > tr > th"));
+            
+            foreach (var _item in rows_table)
+            {
+                string _row = _item.Text;
+                if (_row.Contains(p0))
+                {
+                    Result = true;
+                }
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Then(@"the ""(.*)"" value should be ""(.*)""")]
+        public void ThenTheValueShouldBe(string p0, string p1)
+        {
+            bool Result = false;
+            if (p0 == "Total Bid")
+            {
+                var Element = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td:nth-child(7)"));
+                if (Element.Text == p1)
+                {
+                    Result = true;
+                }             
+            }
+            else if (p0 == "Total Ask")
+            {
+                var Element = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td:nth-child(8)"));
+                if (Element.Text == p1)
+                {
+                    Result = true;
+                }
+
+                Assert.IsTrue(Result);
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Given(@"the ""(.*)"" can be decreased to ""(.*)""")]
+        public void GivenTheCanBeDecreasedTo(string p0, Decimal p1)
+        {
+            var Element = (dynamic)null;
+            if (p0 == "Lot Size")
+            {
+                Element = _driver.FindElement(By.CssSelector("input.lotSize"));
+            }
+            else if (p0 == "Bid")
+            {
+                Element = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td:nth-child(5) > input[type='number']"));
+            }
+            else if (p0 == "Ask")
+            {
+                Element = _driver.FindElement(By.CssSelector("#markets > div > table > tbody > tr:nth-child(1) > td:nth-child(6) > input[type='number']"));
+            }
+            Element.Clear();
+            Element.SendKeys(p1);
+        }
+
+        [When(@"a new row appears in the container")]
+        public void WhenANewRowAppearsInTheContainer()
+        {
+            bool Result = false;
+            var Elements = _driver.FindElements(By.CssSelector("#overrides > div > table > tbody > tr"));
+            if (Elements.Count > 0)
+            {
+                Result = true;
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [When(@"select ""(.*)"" from the ""(.*)"" dropdown")]
+        public void WhenSelectFromTheDropdown(string p0, string p1)
+        {
+            ScenarioContext.Current.Pending();
+        }
+
+        [When(@"the ""(.*)"" can be increased to ""(.*)""")]
+        public void WhenTheCanBeIncreasedTo(string p0, string p1)
+        {
+            if (p1 == "Market")
+            {
+                var dropdown = _driver.FindElement(By.CssSelector("#overrides > div > table > tbody > tr > td:nth-child(2) > select"));
+                var selectedDropdown = new SelectElement(dropdown);
+                selectedDropdown.SelectByText(p0);
+            }
+            else if (p1 == "Tenor")
+            {
+                var dropdown = _driver.FindElement(By.CssSelector("#overrides > div > table > tbody > tr > td:nth-child(3) > select"));
+                var selectedDropdown = new SelectElement(dropdown);
+                selectedDropdown.SelectByText(p0);
+            }
+        }
+
+        [When(@"click on the ""(.*)"" button")]
+        public void WhenClickOnTheButton(string p0)
+        {
+            _driver.FindElement(By.CssSelector(".applyChanges")).Click();
+        }
+
+        [When(@"the ""(.*)"" value should be ""(.*)""")]
+        public void WhenTheValueShouldBe(string p0, string p1)
+        {
+            bool Result = false;
+            if (p0 == "Total Bid")
+            {
+                var Element = _driver.FindElement(By.CssSelector("#overrides > div > table > tbody > tr > td:nth-child(8)"));
+                if (Element.Text == p1)
+                {
+                    Result = true;
+                }
+            }
+            else if (p0 == "Total Ask")
+            {
+                var Element = _driver.FindElement(By.CssSelector("#overrides > div > table > tbody > tr > td:nth-child(9)"));
+                if (Element.Text == p1)
+                {
+                    Result = true;
+                }
+            }
+            Assert.IsTrue(Result);
+        }
+
+        [Then(@"the ""(.*)"" should be saved")]
+        public void ThenTheShouldBeSaved(string p0)
+        {
+            Assert.IsTrue(_driver.FindElement(By.CssSelector("#ribbon > div.applyChanges.disabled")).Displayed);
+        }
+
+
+        //To be completed ---already done
+        [Given(@"locate the spread for the market ""(.*)"" and Tenor ""(.*)""")]
+        public void GivenLocateTheSpreadForTheMarketAndTenor(string p0, string p1)
+        {
+            
+        }
+
+        [Given(@"""(.*)"" is visible in the container")]
+        public void GivenIsVisibleInTheContainer(string p0)
+        {
+            bool Result = true;
+            IList<IWebElement> Rows_table = _driver.FindElements(By.CssSelector("#users > div > table > tbody > tr"));
+            
+            foreach (var _item in Rows_table)
+            {
+                string _row = _item.Text;
+                if (_row.Contains(p0))
+                {
+                    Result = false;
+                }
+            }
+            Assert.IsFalse(Result);
+        }
+
+        [Then(@"the user ""(.*)"" is in the group ""(.*)""")]
+        public void ThenTheUserIsInTheGroup(string p0, string p1)
+        {
+            bool Result = false;
+            IList<IWebElement> Rows_table = _driver.FindElements(By.TagName("tr"));
+            foreach (var _item in Rows_table)
+            {
+                string _rowUser = _item.Text;
+                if (_rowUser.Contains(p0) && _rowUser.Contains(p1))
+                {
+                    Result = true;
+                }
+            }
+            Assert.IsTrue(Result);
+        }
+
+        //To be completed ---already done
+        [Given(@"that the user is in the group ""(.*)""")]
+        public void GivenThatTheUserIsInTheGroup(string p0)
+        {
+            ScenarioContext.Current.Pending();
+        }
+
+        [Given(@"the dropdown should contain ""(.*)"", ""(.*)""")]
+        public void GivenTheDropdownShouldContain(string p0, string p1)
+        {
+            //Thread.Sleep(3000);
+            var Element = _driver.FindElement(By.CssSelector("#content > div > div > div:nth-child(1) > div > div > div > select"));
+            Element.Click();
+            var _selectedElement = new SelectElement(Element);
+            _selectedElement.SelectByText(p0);
+            //Thread.Sleep(3000);
+        }
+
+        //To be completed
+        [Given(@"select ""(.*)"" from the ""(.*)"" dropdown")]
+        public void GivenSelectFromTheDropdown(string p0, string p1)
+        {
+            ScenarioContext.Current.Pending();
+        }
+
+        //To be completed
+        [Then(@"a ""(.*)"" modal should not appear")]
+        public void ThenAModalShouldNotAppear(string p0)
+        {
+            ScenarioContext.Current.Pending();
+        }
+    }
+}
